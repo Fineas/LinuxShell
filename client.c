@@ -40,7 +40,7 @@ int main(int argc , char *argv[])
 
 	
 	while(1){
-		gets(message);
+		fgets(message, 999, stdin);
 		
 		// Send command
 		if( send(sock , message , strlen(message) , 0) < 0){
@@ -50,14 +50,14 @@ int main(int argc , char *argv[])
 		
 		// Get response from command
 		if(recv(sock , server_reply , 2000 , 0) > 0){
-			printf(server_reply);
+			printf("%s",server_reply);
 		}
 
         memset(server_reply, 0, 2000);
 
         // Get prompt
         if(recv(sock , server_reply , 2000 , 0) > 0){
-			printf(server_reply);
+			printf("%s",server_reply);
 		}
 
         memset(server_reply, 0, 2000);
