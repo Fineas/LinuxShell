@@ -275,6 +275,7 @@ int explore_dir(char src[], char dst[], char root[], int interactive, int verbos
 		}
 	}
 
+    // go deeper only if the recursive tag is attached
 	for(i = 0; i < count; i++){
         if(recursive){
             strcpy(tmp_src, src);
@@ -296,18 +297,14 @@ int explore_dir(char src[], char dst[], char root[], int interactive, int verbos
             }
             chdir(src);
             
-            
             if(explore_dir(tmp_src, tmp_dst, root, interactive, verbose, recursive, suffix) == -1){
                 break;
             }
- 
-
         }
         else{
             printf("[!] Attention: -r not specified; omitting directory '%s'.\n",dir_name[i] );
         }
 	}
-
 
 	closedir(pdir);
 	chdir("..");

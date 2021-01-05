@@ -17,7 +17,7 @@ void display_prompt(int fd){
     // dprintf(fd," > ");
     // dprintf(fd,"\033[0m");  
 
-    dprintf(fd, "$> \x00");          
+    dprintf(fd, "$> ");          
 }
 
 void *connection_handler(void *socket_desc){
@@ -41,7 +41,7 @@ void *connection_handler(void *socket_desc){
             dup2(sock, STDERR_FILENO);
 
             char **args = malloc( sizeof(char *[3]));
-            args[0] = (char *)"a.out";
+            args[0] = (char *)"shell";
             args[1] = client_message;
             args[2] = NULL;
 
