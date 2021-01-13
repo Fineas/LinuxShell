@@ -17,6 +17,7 @@
 #include <readline/readline.h>
 #include <readline/history.h>
 
+// MACROS
 #define BUFSIZE 2048
 #define MAXARGS 16
 #define SPLITTERS " \t\r\n\a"
@@ -25,6 +26,7 @@
 
 extern int errno;
 
+// FUNCTION DECLARATION
 int change_directory(char **args);
 int display_history(char **args);
 int create_directory(char **args);
@@ -33,13 +35,14 @@ int help_function(char **args);
 int exit_function(char **args);
 void *connection_handler(void *);
 int copy(char src[], char dst[], char root[], int interactive, int verbose, int recursive, int suffix);
-int explore_dir(char src[], char dst[], char root[], int interactive, int verbose, int recursive, int suffix);
+int directory_trans(char src[], char dst[], char root[], int interactive, int verbose, int recursive, int suffix);
 
+// GLOBALS
 enum { MAXC = 128 };
 char ps[MAXC];
-char *custom_commands[] = {"cd","help","exit","history","mkdir","version","dirname","cp","mv"};
 int counter=0;
 int new_path=0;
+char *custom_commands[] = {"cd","help","exit","history","mkdir","version","dirname","cp","mv"};
 
 // Function to extract Command Arguments
 char **splitline(char *line){
@@ -54,16 +57,17 @@ char **splitline(char *line){
 
     token = strtok(line, SPLITTERS);
     while (token != NULL) {
-        if(token[0] == '*'||token[strlen(token)-1] == '*'){
+        if(token[0] == '*' || token[strlen(token)-1] == '*'){
             DIR *d;
             struct dirent *dir;
             d = opendir(".");
-            if (d) {
+
+            if(d) {
                 while ((dir = readdir(d)) != NULL) {
                     if(dir->d_name[0]!='.'){
                         if(strlen(token) == 1 ||
-                            (token[0] == '*' && (!strncmp(token+1,(dir->d_name+strlen(dir->d_name)-strlen(token)+1),strlen(token)-1))) || 
-                            (token[strlen(token)-1] == '*' && (!strncmp(token,dir->d_name,strlen(token)-1)))){
+                            (token[0] == '*' && (!strncmp(token + 1, (dir->d_name + strlen(dir->d_name) - strlen(token) + 1),strlen(token)-1))) || 
+                            (token[strlen(token) - 1] == '*' && (!strncmp(token, dir->d_name, strlen(token) - 1)))){
                             tokens[position] = dir->d_name;
                             position++;
                         }
@@ -73,19 +77,23 @@ char **splitline(char *line){
             }
         }
 
-        else{tokens[position] = token;
-        position++;}
+        else{
+            tokens[position] = token;
+            position++;
+        }
 
         if (position >= buff) {
             buff += MAXARGS;
             tokens_backup = tokens;
             tokens = realloc(tokens, buff * sizeof(char*));
+
             if (!tokens) {
                 free(tokens_backup);
                 printf("[!] Dynamic memory allocation error.\n");
                 exit(0);
             }
         }
+
         token = strtok(NULL, SPLITTERS);
     }
     tokens[position] = NULL;
@@ -156,6 +164,7 @@ int dirname_function(char **args){
     }
 }
 
+// Copy the content of source to destination
 int copy(char src[], char dst[], char root[], int interactive, int verbose, int recursive, int suffix){
 	int n, in, out;
 	char buf[BUF_SIZE];
@@ -224,7 +233,8 @@ int copy(char src[], char dst[], char root[], int interactive, int verbose, int 
 	return 1;
 }
 
-int explore_dir(char src[], char dst[], char root[], int interactive, int verbose, int recursive, int suffix){
+// Walk the directory
+int directory_trans(char src[], char dst[], char root[], int interactive, int verbose, int recursive, int suffix){
 	DIR *pdir;
 	struct dirent *dirt;
 	struct stat st;
@@ -297,7 +307,7 @@ int explore_dir(char src[], char dst[], char root[], int interactive, int verbos
             }
             chdir(src);
             
-            if(explore_dir(tmp_src, tmp_dst, root, interactive, verbose, recursive, suffix) == -1){
+            if(directory_trans(tmp_src, tmp_dst, root, interactive, verbose, recursive, suffix) == -1){
                 break;
             }
         }
@@ -311,7 +321,6 @@ int explore_dir(char src[], char dst[], char root[], int interactive, int verbos
 
 	return 1;
 }
-
 
 // Function to handle the cp command
 int copy_function(char **args){
@@ -482,7 +491,7 @@ int copy_function(char **args){
                 chdir(root);
                 strcat(dst, "/");
                 strcat(dst, src);
-                explore_dir(src, dst, root, interactive, verbose, recursively, 0);
+                directory_trans(src, dst, root, interactive, verbose, recursively, 0);
             }
             // copy directory into new directory
             else if(mode == 4){
@@ -490,7 +499,7 @@ int copy_function(char **args){
                     printf("[!] Mkdir Error (cp to new directory).\n");
                     return 3;
                 }
-                explore_dir(src, dst, root, interactive, verbose, recursively, 0);
+                directory_trans(src, dst, root, interactive, verbose, recursively, 0);
             }
             else{
                 printf("[!] Error: src is directory and dst is regular file.\n");
@@ -682,7 +691,7 @@ int move_function(char **args){
             chdir(root);
             strcat(dst, "/");
             strcat(dst, src);
-            explore_dir(src, dst, root, interactive, 0, 1, suffix);
+            directory_trans(src, dst, root, interactive, 0, 1, suffix);
         }
         // copy directory into new directory
         else if(mode == 4){
@@ -690,7 +699,7 @@ int move_function(char **args){
                 printf("[!] Mkdir Error (cp to new directory).\n");
                 return 3;
             }
-            explore_dir(src, dst, root, interactive, 0, 1, suffix);
+            directory_trans(src, dst, root, interactive, 0, 1, suffix);
         }
         else{
             printf("[!] Error: src is directory and dst is regular file.\n");
@@ -1030,11 +1039,11 @@ int main(int argc, char **argv){
             printf("\033[0m");
 
             printf("\033[37m\033[46m"); 
-            printf(" user@local_session ");
+            printf(" user@local_session");
             printf("\033[0m");
 
             printf("\033[36m\033[40m"); 
-            printf(" > ");
+            printf("▶");
             printf("\033[0m");
             user_input = readline(ps); // local command
         }
